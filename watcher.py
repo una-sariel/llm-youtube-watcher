@@ -4,11 +4,12 @@ from datetime import datetime
 from youtube_transcript_api import YouTubeTranscriptApi
 
 CHANNELS = [
-    {"name": "Andrej Karpathy", "url": "https://www.youtube.com/@AndrejKarpathy"},
-    {"name": "Yannic Kilcher", "url": "https://www.youtube.com/@YannicKilcher"},
-    {"name": "Two Minute Papers", "url": "https://www.youtube.com/@TwoMinutePapers"},
-    {"name": "Lex Fridman", "url": "https://www.youtube.com/@lexfridman"},
+    {"name": "freeCodeCamp", "url": "https://www.youtube.com/@freecodecamp"},
+    {"name": "Tech With Tim", "url": "https://www.youtube.com/@TechWithTim"},
+    {"name": "Stanford Online", "url": "https://www.youtube.com/@stanfordonline"},
+    {"name": "IBM Technology", "url": "https://www.youtube.com/@IBMTechnology"},
 ]
+
 
 yt_api = YouTubeTranscriptApi()
 
