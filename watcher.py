@@ -35,10 +35,44 @@ def get_channel_videos(channel_url, max_results=3):
 def get_video_transcript(video_id):
     try:
         transcript_list = yt_api.list(video_id)
-        transcript = transcript_list.find_transcript(['en'])
-        fetched = transcript.fetch()
-        text_parts = [snippet['text'] for snippet in fetched]
-        return ' '.join(text_parts)[:800]
+        
+        
+        for transcript in transcript_list:
+            
+            if transcript.is_generated:
+                try:
+                    
+                    fetched = transcript.fetch()
+                    text_parts = [snippet['text'] for snippet in fetched]
+                    full_text = ' '.join(text_parts)
+                    if full_text and len(full_text) > 50:
+                        return full_text[:800]
+                except:
+                    continue
+                
+                try:
+                    
+                    translated = transcript.translate('en')
+                    fetched = translated.fetch()
+                    text_parts = [snippet['text'] for snippet in fetched]
+                    full_text = ' '.join(text_parts)
+                    if full_text and len(full_text) > 50:
+                        return full_text[:800]
+                except:
+                    continue
+        
+        
+        for transcript in transcript_list:
+            try:
+                fetched = transcript.fetch()
+                text_parts = [snippet['text'] for snippet in fetched]
+                full_text = ' '.join(text_parts)
+                if full_text and len(full_text) > 50:
+                    return full_text[:800]
+            except:
+                continue
+        
+        return None
     except Exception as e:
         print(f"Transcript error: {str(e)[:100]}")
         return None
