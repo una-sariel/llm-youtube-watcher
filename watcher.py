@@ -10,7 +10,6 @@ CHANNELS = [
     {"name": "Lex Fridman", "url": "https://www.youtube.com/@lexfridman"},
 ]
 
-
 yt_api = YouTubeTranscriptApi()
 
 def get_channel_videos(channel_url, max_results=3):
@@ -36,31 +35,14 @@ def get_channel_videos(channel_url, max_results=3):
 def get_video_transcript(video_id):
     try:
         transcript_list = yt_api.list(video_id)
-        
-        
-        for transcript in transcript_list:
-            if not transcript.is_generated:
-                fetched = transcript.fetch()
-                text = ' '.join([snippet['text'] for snippet in fetched])
-                return text[:800]
-        
-        
-        for transcript in transcript_list:
-            if transcript.is_generated:
-                try:
-                    translated = transcript.translate('en')
-                    fetched = translated.fetch()
-                    text = ' '.join([snippet['text'] for snippet in fetched])
-                    return text[:800]
-                except:
-                    fetched = transcript.fetch()
-                    text = ' '.join([snippet['text'] for snippet in fetched])
-                    return text[:800]
-        
-        return None
+        transcript = transcript_list.find_transcript(['en'])
+        fetched = transcript.fetch()
+        text_parts = [snippet['text'] for snippet in fetched]
+        return ' '.join(text_parts)[:800]
     except Exception as e:
-        print(f"  Transcript: {str(e)[:80]}")
+        print(f"Transcript error: {str(e)[:100]}")
         return None
+
 def analyze_video(video_title, transcript, channel_name):
     relations = {
         "Andrej Karpathy": "Deep technical tutorials, builds from scratch",
@@ -71,65 +53,46 @@ def analyze_video(video_title, transcript, channel_name):
     
     if transcript:
         transcript_lower = transcript.lower()
-        
-        if any(w in transcript_lower for w in ['transformer', 'attention', 'architecture', 'neural network']):
+        if any(w in transcript_lower for w in ['transformer', 'attention', 'architecture']):
             topic = "LLM architecture explanation"
-            points = [
-                "Explains transformer/attention mechanism from transcript",
-                "Technical deep dive into LLM internals"
-            ]
-        elif any(w in transcript_lower for w in ['rlhf', 'alignment', 'safety', 'fine-tuning']):
+            points = ["Explains transformer/attention from transcript", "Technical deep dive"]
+        elif any(w in transcript_lower for w in ['rlhf', 'alignment', 'safety']):
             topic = "LLM alignment and RLHF"
-            points = [
-                "Discusses model alignment from transcript",
-                "Covers reinforcement learning from human feedback"
-            ]
-        elif any(w in transcript_lower for w in ['paper', 'research', 'breakthrough', 'novel']):
+            points = ["Discusses model alignment from transcript", "Covers RLHF"]
+        elif any(w in transcript_lower for w in ['paper', 'research', 'breakthrough']):
             topic = "AI research summary"
-            points = [
-                "Summarizes recent LLM research from transcript",
-                "Explains breakthrough findings"
-            ]
-        elif any(w in transcript_lower for w in ['interview', 'conversation', 'discussion', 'talk']):
+            points = ["Summarizes recent LLM research from transcript", "Explains breakthrough findings"]
+        elif any(w in transcript_lower for w in ['interview', 'conversation', 'talk']):
             topic = "Expert AI/LLM interview"
-            points = [
-                "In-depth conversation about LLMs from transcript",
-                "Expert perspectives on AI development"
-            ]
+            points = ["In-depth conversation from transcript", "Expert perspectives"]
         else:
             topic = "LLM educational content"
-            points = [
-                "Discusses large language model concepts from transcript",
-                "Provides AI/ML educational content"
-            ]
-        
-        points.append(f"Based on transcript analysis - {channel_name}")
+            points = ["Discusses LLM concepts from transcript", "Educational content"]
+        points.append(f"Based on transcript analysis")
     else:
         title_lower = video_title.lower()
-        
-        if any(w in title_lower for w in ['gpt', 'transformer', 'attention', 'architecture']):
-            topic = "LLM architecture explanation (title-based)"
-            points = ["Based on title: Explains transformer/attention", "Technical deep dive"]
-        elif any(w in title_lower for w in ['rlhf', 'alignment', 'safety', 'fine-tune']):
-            topic = "LLM alignment and RLHF (title-based)"
-            points = ["Based on title: Discusses alignment", "RLHF content"]
-        elif any(w in title_lower for w in ['interview', 'conversation', 'discussion']):
-            topic = "Expert interview (title-based)"
-            points = ["Based on title: In-depth conversation", "Expert perspectives"]
-        elif any(w in title_lower for w in ['paper', 'research', 'breakthrough']):
+        if any(w in title_lower for w in ['gpt', 'transformer', 'attention']):
+            topic = "LLM architecture (title-based)"
+            points = ["Based on title: Transformer/attention", "Technical content"]
+        elif any(w in title_lower for w in ['rlhf', 'alignment']):
+            topic = "LLM alignment (title-based)"
+            points = ["Based on title: RLHF/alignment", "Model safety"]
+        elif any(w in title_lower for w in ['paper', 'research']):
             topic = "Research summary (title-based)"
             points = ["Based on title: Paper summary", "Research findings"]
+        elif any(w in title_lower for w in ['interview', 'conversation']):
+            topic = "Expert interview (title-based)"
+            points = ["Based on title: Interview", "Expert perspectives"]
         else:
             topic = "LLM content (title-based)"
             points = ["Based on title: LLM concepts", "Educational content"]
-        
-        points.append("(No transcript available - analysis based on title)")
+        points.append("No transcript - title-based analysis")
     
     return {
         "speaker": channel_name,
         "main_topic": topic,
         "llm_key_points": points,
-        "relation": relations.get(channel_name, "LLM educational channel"),
+        "relation": relations.get(channel_name, "LLM channel"),
         "has_transcript": transcript is not None
     }
 
@@ -141,16 +104,13 @@ def generate_html(results):
     <meta charset="utf-8">
     <meta http-equiv="refresh" content="3600">
     <style>
-        body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; margin: 40px; background: #f0f0f0; }}
+        body {{ font-family: Arial; margin: 40px; background: #f0f0f0; }}
         h1 {{ color: #333; }}
-        .sub {{ color: #666; font-size: 14px; margin-bottom: 20px; }}
-        table {{ width: 100%; border-collapse: collapse; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }}
+        table {{ width: 100%; border-collapse: collapse; background: white; }}
         th {{ background: #2c3e50; color: white; padding: 12px; text-align: left; }}
         td {{ padding: 12px; border-bottom: 1px solid #ddd; vertical-align: top; }}
-        tr:hover {{ background: #f9f9f9; }}
-        .video-title a {{ color: #3498db; text-decoration: none; font-weight: 500; }}
-        .video-title a:hover {{ text-decoration: underline; }}
-        .key-point {{ margin: 6px 0; padding-left: 18px; position: relative; font-size: 14px; }}
+        .video-title a {{ color: #3498db; text-decoration: none; }}
+        .key-point {{ margin: 5px 0; padding-left: 18px; position: relative; }}
         .key-point:before {{ content: "▹"; position: absolute; left: 0; color: #3498db; }}
         .badge {{ display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; margin-left: 8px; }}
         .badge-transcript {{ background: #27ae60; color: white; }}
@@ -160,49 +120,20 @@ def generate_html(results):
 </head>
 <body>
     <h1>LLM YouTube Watcher</h1>
-    <div class="sub">Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} UTC | Auto-refresh: hourly | Data: YouTube Transcript API</div>
-    <table>
-        <thead>
-            <tr>
-                <th style="width: 15%">Speaker</th>
-                <th style="width: 25%">Video</th>
-                <th style="width: 20%">Main Topic</th>
-                <th style="width: 25%">Key LLM Points</th>
-                <th style="width: 15%">Channel Relation</th>
-            </tr>
-        </thead>
-        <tbody>"""
+    <p>Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | Auto-refresh: hourly</p>
+    <table><thead><tr><th>Speaker</th><th>Video</th><th>Main Topic</th><th>Key LLM Points</th><th>Channel Relation</th></tr></thead><tbody>"""
     
     for r in results:
         points_html = "".join([f'<div class="key-point">{p}</div>' for p in r['llm_key_points'][:3]])
-        
         badge = '<span class="badge badge-transcript">Transcript</span>' if r['has_transcript'] else '<span class="badge badge-title">Title-based</span>'
-        
-        html += f"""
-            <tr>
-                <td><strong>{r['speaker']}</strong>{badge}</td>
-                <td><div class="video-title"><a href="{r['url']}" target="_blank">{r['title'][:80]}</a></div></td>
-                <td>{r['main_topic']}</td>
-                <td>{points_html}</td>
-                <td>{r['relation']}</td>
-            </tr>"""
+        html += f"<tr><td><strong>{r['speaker']}</strong>{badge}</td><td><div class='video-title'><a href='{r['url']}' target='_blank'>{r['title'][:80]}</a></div></td><td>{r['main_topic']}</td><td>{points_html}</td><td>{r['relation']}</td></tr>"
     
     transcript_count = sum(1 for r in results if r['has_transcript'])
-    
-    html += f"""
-        </tbody>
-    </table>
-    <div class="footer">
-        <p>{len(results)} videos analyzed | {transcript_count} with transcripts | {len(results) - transcript_count} title-based</p>
-        <p>Monitored: Andrej Karpathy | Yannic Kilcher | Two Minute Papers | Lex Fridman</p>
-    </div>
-</body>
-</html>"""
+    html += f"</tbody></table><div class='footer'><p>{len(results)} videos | {transcript_count} with transcripts | {len(results)-transcript_count} title-based</p></div></body></html>"
     return html
 
 def main():
     all_results = []
-    
     for channel in CHANNELS:
         videos = get_channel_videos(channel['url'], max_results=3)
         for video in videos:
@@ -219,9 +150,8 @@ def main():
             })
             time.sleep(0.5)
     
-    html_content = generate_html(all_results)
     with open('dashboard.html', 'w', encoding='utf-8') as f:
-        f.write(html_content)
+        f.write(generate_html(all_results))
 
 if __name__ == "__main__":
     main()
