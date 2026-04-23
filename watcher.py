@@ -36,22 +36,31 @@ def get_channel_videos(channel_url, max_results=3):
 def get_video_transcript(video_id):
     try:
         transcript_list = yt_api.list(video_id)
-        try:
-            transcript = transcript_list.find_transcript(['en'])
-            fetched = transcript.fetch()
-            text = ' '.join([snippet['text'] for snippet in fetched])
-            return text[:800]
-        except:
-            available_langs = [t.language_code for t in transcript_list]
-            if available_langs:
-                transcript = transcript_list.find_transcript([available_langs[0]])
+        
+        
+        for transcript in transcript_list:
+            if not transcript.is_generated:
                 fetched = transcript.fetch()
                 text = ' '.join([snippet['text'] for snippet in fetched])
                 return text[:800]
-            return None
-    except:
+        
+        
+        for transcript in transcript_list:
+            if transcript.is_generated:
+                try:
+                    translated = transcript.translate('en')
+                    fetched = translated.fetch()
+                    text = ' '.join([snippet['text'] for snippet in fetched])
+                    return text[:800]
+                except:
+                    fetched = transcript.fetch()
+                    text = ' '.join([snippet['text'] for snippet in fetched])
+                    return text[:800]
+        
         return None
-
+    except Exception as e:
+        print(f"  Transcript: {str(e)[:80]}")
+        return None
 def analyze_video(video_title, transcript, channel_name):
     relations = {
         "Andrej Karpathy": "Deep technical tutorials, builds from scratch",
