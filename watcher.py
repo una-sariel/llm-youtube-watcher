@@ -10,7 +10,6 @@ CHANNELS = [
     {"name": "Lex Fridman", "url": "https://www.youtube.com/@lexfridman"},
 ]
 
-
 yt_api = YouTubeTranscriptApi()
 
 def get_channel_videos(channel_url, max_results=3):
@@ -38,29 +37,22 @@ def get_video_transcript(video_id):
         transcript_list = yt_api.list(video_id)
         
         
-        for transcript in transcript_list:
-            if not transcript.is_generated:
-                fetched = transcript.fetch()
-                text = ' '.join([snippet['text'] for snippet in fetched])
-                return text[:800]
+        transcript = transcript_list.find_transcript(['en'])
+        fetched = transcript.fetch()
         
         
-        for transcript in transcript_list:
-            if transcript.is_generated:
-                try:
-                    translated = transcript.translate('en')
-                    fetched = translated.fetch()
-                    text = ' '.join([snippet['text'] for snippet in fetched])
-                    return text[:800]
-                except:
-                    fetched = transcript.fetch()
-                    text = ' '.join([snippet['text'] for snippet in fetched])
-                    return text[:800]
+        text_parts = []
+        for snippet in fetched:
+            text_parts.append(snippet['text'])
         
-        return None
+        full_text = ' '.join(text_parts)
+        return full_text[:800]
+        
     except Exception as e:
-        print(f"  Transcript: {str(e)[:80]}")
+        
+        print(f"Transcript error for {video_id}: {str(e)[:100]}")
         return None
+
 def analyze_video(video_title, transcript, channel_name):
     relations = {
         "Andrej Karpathy": "Deep technical tutorials, builds from scratch",
@@ -160,7 +152,7 @@ def generate_html(results):
 </head>
 <body>
     <h1>LLM YouTube Watcher</h1>
-    <div class="sub">Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} UTC | Auto-refresh: hourly | Data: YouTube Transcript API</div>
+    <div class="sub">Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} UTC | Auto-refresh: hourly</div>
     <table>
         <thead>
             <tr>
@@ -211,7 +203,7 @@ def main():
             all_results.append({
                 "speaker": analysis['speaker'],
                 "title": video['title'],
-                "url": video['url'],
+                "url': video['url'],
                 "main_topic": analysis['main_topic'],
                 "llm_key_points": analysis['llm_key_points'],
                 "relation": analysis['relation'],
