@@ -105,7 +105,7 @@ The system attempted to fetch transcripts using `youtube-transcript-api` but was
 
 ## Live Demo
 
-**https://una-sariel.github.io/llm-youtube-watcher/index.html**
+**[https://una-sariel.github.io/llm-youtube-watcher/index.html](https://una-sariel.github.io/llm-youtube-watcher/dashboard.html)**
 
 ## Repository
 
