@@ -18,7 +18,7 @@ jobs:
         with:
           python-version: '3.11'
       
-      - run: pip install yt-dlp
+      - run: pip install yt-dlp youtube-transcript-api
       
       - run: python watcher.py
       
